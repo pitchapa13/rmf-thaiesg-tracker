@@ -13,6 +13,10 @@ import json, re, sys, time, os, csv
 from datetime import datetime, timezone, timedelta
 import requests
 import pandas as pd
+try:  # Cloudflare in front of finnomena.com blocks plain datacenter clients (GitHub runners) -> impersonate Chrome TLS
+    from curl_cffi import requests as cffi_requests
+except Exception:  # pragma: no cover
+    cffi_requests = None
 
 BASE = "https://www.finnomena.com/fn3/api/fund/v2/public"
 H = {"User-Agent": "Mozilla/5.0 (fund-tracker)", "Accept": "application/json"}
@@ -26,11 +30,21 @@ TODAY = datetime.now(TZ).strftime("%Y-%m-%d")
 def log(*a):
     print(*a, file=sys.stderr, flush=True)
 
+BROWSER_H = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*", "Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
+    "Referer": "https://www.finnomena.com/fund/filter", "Origin": "https://www.finnomena.com",
+}
+
 def get(url, **kw):
     for i in range(5):
         try:
-            r = requests.get(url, headers=H, timeout=90, **kw)
-            r.raise_for_status()
+            if cffi_requests is not None and (i % 2 == 0 or os.environ.get("FORCE_CFFI")):
+                r = cffi_requests.get(url, headers=BROWSER_H, timeout=90, impersonate="chrome", **kw)
+            else:
+                r = requests.get(url, headers=BROWSER_H, timeout=90, **kw)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]!r}")
             return r.json()
         except Exception as e:
             log("retry", i, url, e); time.sleep(3 * (i + 1))

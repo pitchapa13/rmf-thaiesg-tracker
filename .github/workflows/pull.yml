@@ -1,0 +1,42 @@
+name: Pull fund data (every Friday)
+
+on:
+  schedule:
+    # 16:30 UTC Friday = 23:30 Bangkok (Thai NAVs for the day are published by then)
+    - cron: "30 16 * * 5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pull-funds
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Pull data from Finnomena API
+        run: python pull_funds.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "fund-tracker-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/ RMF_ThaiESG_returns_fees.xlsx rmf_thaiesg_returns_fees.csv
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "data: weekly pull $(date -u +%Y-%m-%d)"
+            git push
+          fi

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RMF / ThaiESG Tracker</title>
+<meta name="description" content="ผลตอบแทนหลังหักค่าธรรมเนียม (YTD/1Y/3Y/5Y) และ management fee ของกองทุน RMF, ThaiESG, ThaiESGX ทุก บลจ. อัปเดตอัตโนมัติทุกวันศุกร์">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#15181d; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#0f6b4f; --accent-ink:#ffffff; --pos:#0f8a4b; --neg:#c9342b; --chip:#eef2f5;
+    --head:#f1f3f6; --hover:#f3f8f6; --warn:#fff7e6; --warn-ink:#7a4b00;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1115; --card:#171a20; --ink:#e8eaee; --muted:#9aa3ae; --line:#2a2f38;
+      --accent:#3cc48f; --accent-ink:#0b1a14; --pos:#4ade80; --neg:#f87171; --chip:#222731;
+      --head:#1d2129; --hover:#1f2a25; --warn:#2a2410; --warn-ink:#f2c56b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1115; --card:#171a20; --ink:#e8eaee; --muted:#9aa3ae; --line:#2a2f38;
+    --accent:#3cc48f; --accent-ink:#0b1a14; --pos:#4ade80; --neg:#f87171; --chip:#222731;
+    --head:#1d2129; --hover:#1f2a25; --warn:#2a2410; --warn-ink:#f2c56b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+  .wrap{max-width:1360px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:22px;margin:0 0 4px;font-weight:700}
+  .sub{color:var(--muted);margin:0 0 14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--ink)}
+  .chip b{font-weight:600}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:500}
+  .tab.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .filters input[type=text],.filters select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);min-width:150px}
+  .filters input[type=text]{min-width:200px;flex:1}
+  .filters label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1100px}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;vertical-align:top}
+  th{position:sticky;top:0;background:var(--head);font-weight:600;cursor:pointer;user-select:none;font-size:12.5px;color:var(--muted);z-index:2}
+  th.sorted{color:var(--ink)}
+  th .arr{font-size:10px;margin-left:2px}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}
+  th:first-child{background:var(--head);z-index:3}
+  td.l,th.l{text-align:left}
+  tr:hover td{background:var(--hover)}
+  .code{font-weight:600}
+  .name{display:block;color:var(--muted);font-size:11.5px;white-space:normal;max-width:300px;line-height:1.3}
+  .pos{color:var(--pos)} .neg{color:var(--neg)} .na{color:var(--muted)}
+  .small{font-size:11.5px;color:var(--muted)}
+  a{color:var(--accent)}
+  .note{background:var(--warn);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:12px}
+  .foot{color:var(--muted);font-size:12.5px;margin-top:16px}
+  .foot li{margin:3px 0}
+  .btn{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;color:var(--ink);background:var(--card);font-size:13px}
+  .count{color:var(--muted);font-size:13px;margin:8px 2px}
+  @media (max-width:640px){ .wrap{padding:14px 12px 40px} h1{font-size:19px} table{min-width:900px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RMF / ThaiESG Tracker</h1>
+  <p class="sub">ผลตอบแทนหลังหักค่าธรรมเนียม (NAV-based) และ management fee ของกองทุน RMF · ThaiESG · ThaiESGX ทุก บลจ. — อัปเดตอัตโนมัติทุกวันศุกร์</p>
+  <div class="meta" id="meta"></div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="ThaiESG">ThaiESG</button>
+    <button class="tab" data-tab="ThaiESGX">ThaiESGX</button>
+    <button class="tab" data-tab="RMF">RMF</button>
+    <button class="tab" data-tab="summary">สรุปราย บลจ.</button>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <input type="text" id="q" placeholder="ค้นหารหัส / ชื่อกองทุน…">
+      <select id="amc"><option value="">บลจ. ทั้งหมด</option></select>
+      <select id="cat"><option value="">กลุ่ม AIMC ทั้งหมด</option></select>
+      <label><input type="checkbox" id="only3y"> เฉพาะกองที่มีผล 3 ปี</label>
+      <a class="btn" href="RMF_ThaiESG_returns_fees.xlsx" download>⬇ Excel</a>
+      <a class="btn" href="rmf_thaiesg_returns_fees.csv" download>⬇ CSV</a>
+    </div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="tblwrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+
+  <div class="note">
+    ผลตอบแทน &gt; 1 ปี เป็น <b>% ต่อปี (annualized)</b> ตามมาตรฐาน AIMC และคำนวณจาก NAV จึง <b>หักค่าธรรมเนียมการจัดการ/TER แล้ว</b> (ยังไม่หัก front-end/back-end และยังไม่รวมสิทธิประโยชน์ทางภาษี) ·
+    ค่าธรรมเนียม "เก็บจริง" = อัตราที่เรียกเก็บจริงล่าสุด, "สูงสุด" = เพดานตามหนังสือชี้ชวน (รวม VAT) ·
+    ThaiESG เริ่มขาย ธ.ค. 2566 จึงยังไม่มีผล 3 ปี (ครบประมาณ ธ.ค. 2569); ThaiESGX เริ่ม พ.ค. 2568 ·
+    คอลัมน์ "ตั้งแต่เริ่มเก็บ" คำนวณจาก NAV ที่ระบบเก็บไว้ทุกสัปดาห์ (จะเริ่มมีค่าเมื่อเก็บครบ ≥ 2 สัปดาห์)
+  </div>
+
+  <div class="foot">
+    <ul>
+      <li>แหล่งข้อมูล: Finnomena public API (ข้อมูล NAV/ค่าธรรมเนียมจาก Morningstar + fund factsheet ก.ล.ต.) — เป็นข้อมูล third-party ควรตรวจกับ factsheet ล่าสุดของแต่ละ บลจ. ก่อนนำไปเผยแพร่ (ลิงก์ในคอลัมน์ FS)</li>
+      <li>ไม่ใช่คำแนะนำการลงทุน ผลการดำเนินงานในอดีตไม่ได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  var DATA=null, HIST=null, tab='ThaiESG', sortKey='r3y', sortDir=-1;
+  var $=function(s){return document.querySelector(s)};
+  var fmt=function(v,d){ if(v===null||v===undefined||isNaN(v)) return '<span class="na">—</span>'; var n=Number(v).toFixed(d===undefined?2:d); return n; };
+  var ret=function(v){ if(v===null||v===undefined||isNaN(v)) return '<span class="na">—</span>'; var c=v>0?'pos':(v<0?'neg':''); return '<span class="'+c+'">'+(v>0?'+':'')+Number(v).toFixed(2)+'</span>'; };
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+
+  // return computed from stored NAV history: latest NAV vs. a NAV at least `minDays` old (first point if minDays==null)
+  function histRet(code, minDays){
+    if(!HIST||!HIST.nav||!HIST.nav[code]) return null;
+    var s=HIST.nav[code]; if(s.length<2) return null;
+    var last=s[s.length-1], base=null;
+    if(minDays==null){ base=s[0]; }
+    else{
+      var lastT=Date.parse(last[0]);
+      for(var i=s.length-2;i>=0;i--){ if((lastT-Date.parse(s[i][0]))/864e5>=minDays){ base=s[i]; break; } }
+    }
+    if(!base||base[0]===last[0]||!base[1]) return null;
+    return (last[1]/base[1]-1)*100;
+  }
+
+  var COLS=[
+    {k:'code',l:'กองทุน',left:true,r:function(f){return '<span class="code">'+esc(f.code)+'</span><span class="name">'+esc(f.name||'')+'</span>'}},
+    {k:'amc',l:'บลจ.',left:true,r:function(f){return esc(f.amc)}},
+    {k:'cat',l:'กลุ่ม AIMC',left:true,r:function(f){return '<span class="small">'+esc(f.cat||'')+'</span>'}},
+    {k:'nav_date',l:'NAV ณ',r:function(f){return '<span class="small">'+esc(f.nav_date||'')+'</span>'}},
+    {k:'ytd',l:'YTD %',r:function(f){return ret(f.ytd)}},
+    {k:'r1y',l:'1Y %',r:function(f){return ret(f.r1y)}},
+    {k:'r3y',l:'3Y %/ปี',r:function(f){return ret(f.r3y)}},
+    {k:'r5y',l:'5Y %/ปี',r:function(f){return ret(f.r5y)}},
+    {k:'r10y',l:'10Y %/ปี',r:function(f){return ret(f.r10y)}},
+    {k:'w1',l:'1 สัปดาห์ %',r:function(f){return ret(f.w1)}},
+    {k:'since',l:'ตั้งแต่เริ่มเก็บ %',r:function(f){return ret(f.since)}},
+    {k:'mgmt_act',l:'Mgmt fee เก็บจริง',r:function(f){return fmt(f.mgmt_act)+'<span class="small"> / '+fmt(f.mgmt_max)+'</span>'}},
+    {k:'ter_act',l:'TER เก็บจริง',r:function(f){return fmt(f.ter_act)+'<span class="small"> / '+fmt(f.ter_max)+'</span>'}},
+    {k:'front_act',l:'Front / Back',r:function(f){return '<span class="small">'+fmt(f.front_act)+' / '+fmt(f.back_act)+'</span>'}},
+    {k:'factsheet',l:'FS',r:function(f){return f.factsheet?'<a href="'+esc(f.factsheet)+'" target="_blank" rel="noopener">PDF</a>':'<span class="na">—</span>'}}
+  ];
+
+  function renderMeta(m){
+    var c=m.counts||{};
+    $('#meta').innerHTML=[
+      '<span class="chip">อัปเดตล่าสุด <b>'+esc(m.pulled_at)+'</b></span>',
+      '<span class="chip">NAV ล่าสุด <b>'+esc(m.nav_date_max)+'</b></span>',
+      '<span class="chip">RMF <b>'+(c.RMF||0)+'</b> · ThaiESG <b>'+(c.ThaiESG||0)+'</b> · ThaiESGX <b>'+(c.ThaiESGX||0)+'</b> กอง</span>',
+      '<span class="chip">เก็บ NAV แล้ว <b>'+((m.history_dates||[]).length)+'</b> สัปดาห์</span>'
+    ].join('');
+  }
+
+  function fillSelects(){
+    var funds=DATA.funds.filter(function(f){return f.type===tab});
+    var amcs={},cats={};
+    funds.forEach(function(f){ if(f.amc)amcs[f.amc]=1; if(f.cat)cats[f.cat]=1; });
+    var a=$('#amc'),c=$('#cat'), av=a.value, cv=c.value;
+    a.innerHTML='<option value="">บลจ. ทั้งหมด</option>'+Object.keys(amcs).sort().map(function(x){return '<option'+(x===av?' selected':'')+'>'+esc(x)+'</option>'}).join('');
+    c.innerHTML='<option value="">กลุ่ม AIMC ทั้งหมด</option>'+Object.keys(cats).sort().map(function(x){return '<option'+(x===cv?' selected':'')+'>'+esc(x)+'</option>'}).join('');
+  }
+
+  function filtered(){
+    var q=$('#q').value.trim().toLowerCase(), amc=$('#amc').value, cat=$('#cat').value, o3=$('#only3y').checked;
+    return DATA.funds.filter(function(f){
+      if(f.type!==tab) return false;
+      if(amc&&f.amc!==amc) return false;
+      if(cat&&f.cat!==cat) return false;
+      if(o3&&(f.r3y===null||f.r3y===undefined)) return false;
+      if(q&&!((f.code||'').toLowerCase().indexOf(q)>=0||(f.name||'').toLowerCase().indexOf(q)>=0)) return false;
+      return true;
+    });
+  }
+
+  function sortRows(rows){
+    var k=sortKey, d=sortDir;
+    return rows.slice().sort(function(a,b){
+      var x=a[k], y=b[k];
+      var xn=(x===null||x===undefined||x===''), yn=(y===null||y===undefined||y==='');
+      if(xn&&yn) return 0; if(xn) return 1; if(yn) return -1;
+      if(typeof x==='number'&&typeof y==='number') return (x-y)*d;
+      return String(x).localeCompare(String(y),'th')*d;
+    });
+  }
+
+  function renderTable(){
+    var rows=sortRows(filtered());
+    var th='<tr>'+COLS.map(function(c){ var s=c.k===sortKey; return '<th data-k="'+c.k+'" class="'+(c.left?'l ':'')+(s?'sorted':'')+'">'+c.l+(s?'<span class="arr">'+(sortDir<0?'▼':'▲')+'</span>':'')+'</th>'; }).join('')+'</tr>';
+    $('#tbl thead').innerHTML=th;
+    $('#tbl tbody').innerHTML=rows.map(function(f){ return '<tr>'+COLS.map(function(c){return '<td'+(c.left?' class="l"':'')+'>'+c.r(f)+'</td>'}).join('')+'</tr>'; }).join('');
+    $('#count').textContent='แสดง '+rows.length+' กอง (คลิกหัวตารางเพื่อเรียงลำดับ)';
+    $('#tbl').style.minWidth='';
+  }
+
+  function mean(a){ var v=a.filter(function(x){return typeof x==='number'&&!isNaN(x)}); return v.length?v.reduce(function(s,x){return s+x},0)/v.length:null; }
+  function median(a){ var v=a.filter(function(x){return typeof x==='number'&&!isNaN(x)}).sort(function(x,y){return x-y}); if(!v.length) return null; var m=v.length>>1; return v.length%2?v[m]:(v[m-1]+v[m])/2; }
+
+  function renderSummary(){
+    var types=['ThaiESG','ThaiESGX','RMF'];
+    var out='';
+    types.forEach(function(t){
+      var by={};
+      DATA.funds.filter(function(f){return f.type===t}).forEach(function(f){ (by[f.amc]=by[f.amc]||[]).push(f); });
+      var rows=Object.keys(by).map(function(a){ var g=by[a]; return {amc:a,n:g.length,n3:g.filter(function(f){return f.r3y!=null}).length,ytd:mean(g.map(function(f){return f.ytd})),r1y:mean(g.map(function(f){return f.r1y})),r3y:mean(g.map(function(f){return f.r3y})),m3:median(g.map(function(f){return f.r3y})),mg:mean(g.map(function(f){return f.mgmt_act})),ter:mean(g.map(function(f){return f.ter_act}))}; });
+      var key=(t==='RMF')?'r3y':'r1y';
+      rows.sort(function(a,b){ var x=a[key],y=b[key]; if(x==null&&y==null)return 0; if(x==null)return 1; if(y==null)return -1; return y-x; });
+      out+='<tr><th class="l" colspan="9" style="position:static;text-align:left;font-size:14px;color:var(--ink)">'+t+' — เฉลี่ยราย บลจ. (เรียงตาม '+(t==='RMF'?'3Y':'1Y')+')</th></tr>';
+      out+='<tr><th class="l" style="position:static">บลจ.</th><th style="position:static">จำนวนกอง</th><th style="position:static">มีผล 3Y</th><th style="position:static">เฉลี่ย YTD %</th><th style="position:static">เฉลี่ย 1Y %</th><th style="position:static">เฉลี่ย 3Y %/ปี</th><th style="position:static">มัธยฐาน 3Y %/ปี</th><th style="position:static">เฉลี่ย Mgmt fee เก็บจริง</th><th style="position:static">เฉลี่ย TER เก็บจริง</th></tr>';
+      rows.forEach(function(r){ out+='<tr><td class="l"><span class="code">'+esc(r.amc)+'</span></td><td>'+r.n+'</td><td>'+r.n3+'</td><td>'+ret(r.ytd)+'</td><td>'+ret(r.r1y)+'</td><td>'+ret(r.r3y)+'</td><td>'+ret(r.m3)+'</td><td>'+fmt(r.mg)+'</td><td>'+fmt(r.ter)+'</td></tr>'; });
+    });
+    $('#tbl thead').innerHTML='';
+    $('#tbl tbody').innerHTML=out;
+    $('#count').textContent='ค่าเฉลี่ยอย่างง่าย (equal-weight) ของทุก share class ของแต่ละ บลจ.';
+  }
+
+  function render(){
+    if(tab==='summary'){ renderSummary(); return; }
+    fillSelects(); renderTable();
+  }
+
+  document.getElementById('tabs').addEventListener('click',function(e){
+    var b=e.target.closest('.tab'); if(!b) return;
+    tab=b.getAttribute('data-tab');
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('active',x===b)});
+    if(tab!=='summary'){ sortKey=(tab==='RMF')?'r3y':'r1y'; sortDir=-1; }
+    render();
+  });
+  $('#tbl').addEventListener('click',function(e){
+    var th=e.target.closest('th[data-k]'); if(!th) return;
+    var k=th.getAttribute('data-k');
+    if(k===sortKey) sortDir=-sortDir; else { sortKey=k; sortDir=(k==='code'||k==='amc'||k==='cat'||k==='nav_date')?1:-1; }
+    renderTable();
+  });
+  ['q','amc','cat','only3y'].forEach(function(id){ $('#'+id).addEventListener('input',render); $('#'+id).addEventListener('change',render); });
+
+  var bust='?v='+Math.floor(Date.now()/36e5);
+  Promise.all([
+    fetch('data/funds.json'+bust).then(function(r){ if(!r.ok) throw new Error('funds.json '+r.status); return r.json(); }),
+    fetch('data/history.json'+bust).then(function(r){ return r.ok?r.json():null; }).catch(function(){return null;})
+  ]).then(function(res){
+    DATA=res[0]; HIST=res[1];
+    DATA.funds.forEach(function(f){ f.w1=histRet(f.code,5); f.since=histRet(f.code,null); });
+    renderMeta(DATA.meta); sortKey='r1y'; render();
+  }).catch(function(err){
+    $('#count').innerHTML='<span class="neg">โหลดข้อมูลไม่สำเร็จ: '+esc(err.message)+'</span>';
+  });
+})();
+</script>
+</body>
+</html>

@@ -188,13 +188,26 @@
     });
   }
 
+  // columns whose value is empty for EVERY fund in the current tab are hidden (e.g. 3Y/5Y/10Y for ThaiESG, weekly columns until history exists)
+  var OPTIONAL=['ytd','r1y','r3y','r5y','r10y','w1','since','mgmt_act','ter_act','front_act'];
+  function visibleCols(){
+    var all=DATA.funds.filter(function(f){return f.type===tab});
+    return COLS.filter(function(c){
+      if(OPTIONAL.indexOf(c.k)<0) return true;
+      var ks=(c.k==='mgmt_act')?['mgmt_act','mgmt_max']:(c.k==='ter_act')?['ter_act','ter_max']:(c.k==='front_act')?['front_act','back_act']:[c.k];
+      return all.some(function(f){ return ks.some(function(k){ var v=f[k]; return v!==null&&v!==undefined&&!isNaN(v); }); });
+    });
+  }
+
   function renderTable(){
     var rows=sortRows(filtered());
-    var th='<tr>'+COLS.map(function(c){ var s=c.k===sortKey; return '<th data-k="'+c.k+'" class="'+(c.left?'l ':'')+(s?'sorted':'')+'">'+c.l+(s?'<span class="arr">'+(sortDir<0?'▼':'▲')+'</span>':'')+'</th>'; }).join('')+'</tr>';
+    var cols=visibleCols();
+    if(!cols.some(function(c){return c.k===sortKey})){ sortKey=cols.some(function(c){return c.k==='r1y'})?'r1y':'code'; }
+    var th='<tr>'+cols.map(function(c){ var s=c.k===sortKey; return '<th data-k="'+c.k+'" class="'+(c.left?'l ':'')+(s?'sorted':'')+'">'+c.l+(s?'<span class="arr">'+(sortDir<0?'▼':'▲')+'</span>':'')+'</th>'; }).join('')+'</tr>';
     $('#tbl thead').innerHTML=th;
-    $('#tbl tbody').innerHTML=rows.map(function(f){ return '<tr>'+COLS.map(function(c){return '<td'+(c.left?' class="l"':'')+'>'+c.r(f)+'</td>'}).join('')+'</tr>'; }).join('');
+    $('#tbl tbody').innerHTML=rows.map(function(f){ return '<tr>'+cols.map(function(c){return '<td'+(c.left?' class="l"':'')+'>'+c.r(f)+'</td>'}).join('')+'</tr>'; }).join('');
     $('#count').textContent='แสดง '+rows.length+' กอง (คลิกหัวตารางเพื่อเรียงลำดับ)';
-    $('#tbl').style.minWidth='';
+    $('#tbl').style.minWidth=cols.length<10?'0':'';
   }
 
   function mean(a){ var v=a.filter(function(x){return typeof x==='number'&&!isNaN(x)}); return v.length?v.reduce(function(s,x){return s+x},0)/v.length:null; }
